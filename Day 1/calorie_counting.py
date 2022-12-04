@@ -1,12 +1,18 @@
-def count_calories():
-    file = open("input", "r")
-    calories_per_elf = [calories.split("\n") for calories in file.read().split("\n\n")]
-    sum_calories_per_elf = [sum(map(int, calories)) for calories in calories_per_elf]
-    sum_calories_per_elf.sort()
+import os
 
-    print(sum_calories_per_elf[-1])
-    print(sum(sum_calories_per_elf[-3:]))
+import requests
+from itertools import groupby
 
-if __name__ == '__main__':
-    count_calories()
+with requests.Session() as s:
+    s.cookies.set('session', os.environ['AOC_2022_COOKIE'])
+    resp = s.get('https://adventofcode.com/2022/day/1/input')
 
+
+grouped_res = groupby(resp.iter_lines(), lambda x: x != b'')
+grouped_res = [(map(int, list(g))) for k, g in grouped_res if k]
+
+#1
+print(max(map(sum, grouped_res)))
+
+# 2
+print(sorted(list(map(sum, grouped_res)))[-3:])
