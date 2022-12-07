@@ -1,13 +1,18 @@
 import os
 
 import requests
+from itertools import chain
 
-with requests.Session() as s:
-    s.cookies.set('session', os.environ['AOC_2022_COOKIE'])
-    resp = s.get("https://adventofcode.com/2022/day/3/input")
 
-small_letters = list(map(chr, range(ord('a'), ord('z') + 1)))
-capital_letters = list(map(chr, range(ord('A'), ord('Z') + 1)))
+def get_input():
+    with requests.Session() as s:
+        s.cookies.set('session', os.environ['AOC_2022_COOKIE'])
+        resp = s.get("https://adventofcode.com/2022/day/3/input")
+    return resp
+
+
+small_letters = list(range(ord('a'), ord('z') + 1))
+capital_letters = list(range(ord('A'), ord('Z') + 1))
 all_letters = small_letters + capital_letters
 
 
@@ -22,8 +27,14 @@ def sum_letter_values(letter_list):
     return sum([all_letters.index(item) + 1 for item in letter_list])
 
 
+def chunk_input(values, s):
+    return zip(*[iter(values)] * s)
+
+
 # 1
-total_sum = sum([sum_letter_values(sliced_line(line.decode("ascii"))) for line in resp.iter_lines()])
+total_sum = sum([sum_letter_values(sliced_line(line)) for line in get_input().iter_lines()])
 print(total_sum)
 
-
+# 2
+intersecting_values = chain(*[set.intersection(*map(set, line)) for line in chunk_input(get_input().iter_lines(), 3)])
+print(sum_letter_values(intersecting_values))
