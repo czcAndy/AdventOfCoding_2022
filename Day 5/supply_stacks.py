@@ -21,6 +21,10 @@ def transpose(matrix):
     return list(zip(*matrix))
 
 
+def duplicate_matrix(matrix):
+    return [row[:] for row in matrix]
+
+
 def clean_input(matrix):
     clean_matrix = []
     for row in matrix:
@@ -35,12 +39,7 @@ def clean_instructions(instr_list):
             for instr in instr_list]
 
 
-def pretty_print(matrix):
-    for row_index in matrix:
-        print(row_index)
-
-
-def perform_action(instruction, matrix):
+def perform_action_part_1(instruction, matrix):
     start_index, row_from_index, row_to_index = [i - 1 for i in instruction]
 
     matrix[row_to_index] = matrix[row_from_index][start_index::-1] + matrix[row_to_index]
@@ -49,17 +48,30 @@ def perform_action(instruction, matrix):
     return matrix
 
 
-def calculate_answer_part1(matrix):
-    for instr in instr_list:
-        matrix = perform_action(instr, matrix)
+def perform_action_part_2(instruction, matrix):
+    stop_index, row_from_index, row_to_index = [i - 1 for i in instruction]
 
-    for rows in matrix:
+    matrix[row_to_index] = matrix[row_from_index][0:stop_index + 1] + matrix[row_to_index]
+    del matrix[row_from_index][0:stop_index + 1]
+
+    return matrix
+
+
+def calculate_answer(matrix, instr_list, action_function):
+    matrix_cp = duplicate_matrix(matrix)
+    for instr in instr_list:
+        matrix_cp = action_function(instr, matrix_cp)
+
+    for rows in matrix_cp:
         print(rows[0])
 
 
-# Part 1
 input_matrix, _, instr_list = get_input_and_instructions(resp)
 input_matrix = transpose(input_matrix)
 input_matrix = clean_input(input_matrix)
 instr_list = clean_instructions(instr_list)
-calculate_answer_part1(input_matrix)
+
+# Part 1
+calculate_answer(input_matrix, instr_list, perform_action_part_1)
+# Part 2
+calculate_answer(input_matrix, instr_list, perform_action_part_2)
