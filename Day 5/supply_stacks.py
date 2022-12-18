@@ -9,41 +9,30 @@ with requests.Session() as s:
 
 def get_input_and_instructions(resp):
     result = groupby(resp.iter_lines(), lambda ln: len(ln.strip()) == 0)
-    result = [[g for g in group] for key, group in result]
+    result = [[g.decode("ascii") for g in group] for key, group in result]
     return result
 
 
-def convert_input_matrix_to_string(matrix):
-    result = [[item for item in input_line.decode("ascii")]
-              for input_line in matrix]
-    return result
+def is_noise(value):
+    return value in [" ", "]", "[", "move", "to", "from"]
 
 
-def convert_instr_list_to_instr_matrix(instr_list):
-    result = [[word for word in instr.decode("ascii").split(" ")
-               if word != "move" and word != "to" and word != "from"]
-              for instr in instr_list]
-
-    result = [[int(no) for no in value] for value in result]
-
-    return result
+def transpose(matrix):
+    return list(zip(*matrix))
 
 
-def is_blank(value):
-    return value == ' '
-
-
-def list_is_not_noise(column):
-    return column[-1].isnumeric()
-
-
-def remove_noise(matrix):
+def clean_input(matrix):
     clean_matrix = []
-    for col_index in range(len(matrix[0])):
-        if matrix[-1][col_index].isnumeric():
-            clean_matrix.append(
-                [matrix[item_index][col_index] for item_index in range(len(matrix))])
+    for row in matrix:
+        if not all(is_noise(item) for item in row):
+            clean_matrix.append([item for item in row if not is_noise(item) and not item.isnumeric()])
     return clean_matrix
+
+
+def clean_instructions(instr_list):
+    return [[int(word) for word in instr.split(" ")
+             if not is_noise(word)]
+            for instr in instr_list]
 
 
 def pretty_print(matrix):
@@ -52,45 +41,25 @@ def pretty_print(matrix):
 
 
 def perform_action(instruction, matrix):
-    number_of_items_to_move, row_from, row_to = instruction
-    row_from -= 1
-    row_to -= 1
+    start_index, row_from_index, row_to_index = [i - 1 for i in instruction]
 
-    items_to_be_moved = []
-    number_of_items_to_be_moved = 0
-    for row_item_index in range(len(matrix[row_from])):
-        if not is_blank(matrix[row_from][row_item_index]) and number_of_items_to_be_moved < number_of_items_to_move:
-            items_to_be_moved.append(matrix[row_from][row_item_index])
-            matrix[row_from][row_item_index] = ' '
-            number_of_items_to_be_moved += 1
-
-    for row_item_index in range(len(matrix[row_to])):
-        if not is_blank(matrix[row_to][row_item_index]):
-            insert_index = row_item_index
-            break
-
-    spill_over = insert_index - len(items_to_be_moved)
-    while spill_over < 0:
-        matrix[row_to].insert(0, ' ')
-        spill_over += 1
-
-    for row_item_index in range(len(matrix[row_to])):
-        if not is_blank(matrix[row_to][row_item_index]):
-            for item_index in range(len(items_to_be_moved)):
-                matrix[row_to][row_item_index - item_index - 1] = items_to_be_moved[-item_index - 1]
-            break
+    matrix[row_to_index] = matrix[row_from_index][start_index::-1] + matrix[row_to_index]
+    del matrix[row_from_index][start_index::-1]
 
     return matrix
 
 
+def calculate_answer_part1(matrix):
+    for instr in instr_list:
+        matrix = perform_action(instr, matrix)
+
+    for rows in matrix:
+        print(rows[0])
+
+
+# Part 1
 input_matrix, _, instr_list = get_input_and_instructions(resp)
-input_matrix = convert_input_matrix_to_string(input_matrix)
-instr_list = convert_instr_list_to_instr_matrix(instr_list)
-
-print(instr_list)
-
-matrix = remove_noise(input_matrix)
-for instr in instr_list:
-    matrix = perform_action(instr, matrix)
-    pretty_print(matrix)
-    print("")
+input_matrix = transpose(input_matrix)
+input_matrix = clean_input(input_matrix)
+instr_list = clean_instructions(instr_list)
+calculate_answer_part1(input_matrix)
