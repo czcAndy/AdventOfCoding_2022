@@ -1,54 +1,56 @@
 class Node:
-    def __init__(self, name, size=0):
-        self.name = name
-        self.size = size
-        self.adjacency_set = set()
+    def __init__(self, name, size=0, is_directory=False):
+        self._name = name
+        self._size = size
+        self._adjacency_set = set()
+        self._is_directory = is_directory
 
     def add_edge(self, n):
-        self.adjacency_set.add(n)
+        self._adjacency_set.add(n)
+        self.add_size(n.get_size())
 
-    def get_adjacent_edges(self):
-        return self.adjacency_set
+    def get_adjacent_nodes(self):
+        return self._adjacency_set
 
-    def get_adjacent_edge(self, edge_name):
-        for edge in self.adjacency_set:
+    def get_adjacent_node(self, edge_name):
+        for edge in self._adjacency_set:
             if edge.get_name() == edge_name:
                 return edge
 
     def get_name(self):
-        return self.name
+        return self._name
 
     def get_size(self):
-        return self.size
+        return self._size
+
+    def add_size(self, size):
+        self._size += size
+
+    def is_directory(self):
+        return self._is_directory
 
 
 class FileTree:
     def __init__(self):
-        self.node_list = []
+        self._node_list = []
 
     def add_node(self, n):
-        self.node_list.append(n)
+        self._node_list.append(n)
 
     def add_edge(self, n1, n2):
-        for node in self.node_list:
+        for node in self._node_list:
             if node == n1:
                 node.add_edge(n2)
 
     def get_parent(self, n):
-        for i in range(len(self.node_list)):
-            for dest in self.node_list[i].get_adjacent_edges():
+        for i in range(len(self._node_list)):
+            for dest in self._node_list[i].get_adjacent_nodes():
                 if dest == n:
-                    return self.node_list[i]
+                    return self._node_list[i]
 
     def get_adjacent_edges(self, v):
-        return self.node_list[v].get_adjacent_edges()
+        return self._node_list[v].get_adjacent_nodes()
 
-
-def depth_first(file_tree, visited, current=0):
-    if visited[current] == 1:
-        return
-    visited[current] = 1
-    print("Visited ", current)
-
-    for edge in file_tree.get_adjacent_vertices(current):
-        depth_first(file_tree, visited, edge)
+    def find_nodes_fulfill_point_a(self):
+        return sum(
+            node.get_size() for node in self._node_list if node.get_size() <= 100000 and node.is_directory() is True)
